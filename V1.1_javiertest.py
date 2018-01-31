@@ -3,9 +3,15 @@ import numpy as np
 import numpy.random as rn
 import math as m
 import matplotlib.pyplot as plt
+<<<<<<< HEAD
 from timeit import default_timer as timer
 from numba import vectorize
 
+=======
+import time
+import sys
+from timeit import default_timer as timer
+>>>>>>> 1241f6b32fae1c1b8f1a766ee0746f219d0f1a1d
 
 def f12(Body1,Body2,position_1):
     if Body1 == Body2:
@@ -43,23 +49,23 @@ def RK4_gravitational(Body, dt):
 
 
 def integrator():
-    asteroid_init()
-    dt = t_end / t_intervals
-    #plt.figure(figsize=(8,6))
+    t_end = dt * t_intervals
+    plt.figure(figsize=(8,6))
     for i in range(t_intervals):
         temporalbodielist = bodieslist
         for j, Body in enumerate(temporalbodielist):
             positions[Body] = EulerCromer_gravitational(Body, dt)
             #Condition to get rid of asteroids flying away
-            if positions[Body][0] > 3*R_jup or positions[Body][1] > 3* R_jup or positions[Body][0] < -3*R_jup or positions[Body][1] < -3* R_jup:  #Eliminating from the list asteroids scaping
+            if positions[Body][0] > 4*R_jup or positions[Body][1] > 4* R_jup or positions[Body][0] < -4*R_jup or positions[Body][1] < -4* R_jup:  #Eliminating from the list asteroids scaping
                 bodieslist.remove(Body)
-        #if (i % (t_intervals/10)) == 0:
-        #    plt.plot(positions["Sun"][0], positions["Sun"][1], 'o', c = 'y') 
+#        if (i % (100)) == 0:
+#            plt.plot(positions["Sun"][0], positions["Sun"][1], 'o', c = 'y') 
         #    plt.plot(positions["Jupiter"][0], positions["Jupiter"][1], 'o', c = 'b') 
         #    if(nbodies!=0): 
         #        for k in range(nbodies):
         #            plt.plot(positions["Body "+str(k+1)][0], positions["Body "+str(k+1)][1], 'o', c = 'g')  
-    #plt.show()
+#    plt.show()
+        if (i%(t_intervals/1000)==0): print str(i*100/t_intervals)+"%"
     return positions
 
 
@@ -79,22 +85,31 @@ V_jup = 1.3058e+4
 M_sun = 1.989e+30
 R_earth = 1.496e+11 #Smallest R for an asteroid
 
+<<<<<<< HEAD
 nbodies = 2
+=======
+nbodies = 1000
+>>>>>>> 1241f6b32fae1c1b8f1a766ee0746f219d0f1a1d
 print "Initial number of asteroids = ",nbodies
 t_intervals = int(1e3)
-t_end = 1e9
+dt = 1e5
 bodieslist = ["Sun", "Jupiter"]
 initcond = np.zeros((nbodies,7))
 positions = {}
-positions["Sun"] = np.array([0,0,0,0,0,0,M_sun]) #x,y,z,vx, vy, vz
+positions["Sun"] = np.array([0,0,0,0,-(V_jup*M_jup)/M_sun,0,M_sun]) #x,y,z,vx, vy, vz
 positions["Jupiter"] = np.array([R_jup,0,0,0,V_jup,0,M_jup])
-
+asteroid_init()
+start = timer()   
 integrator()
+duration = timer() - start   
+print(duration)
 print "Final number of asteroids = ", len(bodieslist)-2
 
 plt.figure(figsize=(8,6))
 plt.plot(positions["Sun"][0], positions["Sun"][1], 'o', c = 'y') 
 plt.plot(positions["Jupiter"][0], positions["Jupiter"][1], 'o', c = 'b') 
-for k in range(nbodies):
-    plt.plot(positions["Body "+str(k+1)][0], positions["Body "+str(k+1)][1], 'o', c = 'g', markersize = 1)  
+bodieslist.remove("Sun")
+bodieslist.remove("Jupiter")
+for k in bodieslist:
+    plt.plot(positions[k][0], positions[k][1], 'o', c = 'g', markersize = 1)  
 plt.show()
