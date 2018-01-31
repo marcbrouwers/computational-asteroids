@@ -3,7 +3,8 @@ import numpy as np
 import numpy.random as rn
 import math as m
 import matplotlib.pyplot as plt
-import time
+from timeit import default_timer as timer
+from numba import vectorize
 
 
 def f12(Body1,Body2,position_1):
@@ -78,7 +79,7 @@ V_jup = 1.3058e+4
 M_sun = 1.989e+30
 R_earth = 1.496e+11 #Smallest R for an asteroid
 
-nbodies = 5000
+nbodies = 2
 print "Initial number of asteroids = ",nbodies
 t_intervals = int(1e3)
 t_end = 1e9
