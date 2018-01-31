@@ -5,7 +5,7 @@ import math as m
 import matplotlib.pyplot as plt
 import time
 import sys
-
+from timeit import default_timer as timer
 
 def f12(Body1,Body2,position_1):
     if Body1 == Body2:
@@ -43,7 +43,6 @@ def RK4_gravitational(Body, dt):
 
 
 def integrator():
-    asteroid_init()
     t_end = dt * t_intervals
     plt.figure(figsize=(8,6))
     for i in range(t_intervals):
@@ -80,17 +79,20 @@ V_jup = 1.3058e+4
 M_sun = 1.989e+30
 R_earth = 1.496e+11 #Smallest R for an asteroid
 
-nbodies = 25000
+nbodies = 1000
 print "Initial number of asteroids = ",nbodies
-t_intervals = int(1e4)
-dt = 5e6
+t_intervals = int(1e3)
+dt = 1e5
 bodieslist = ["Sun", "Jupiter"]
 initcond = np.zeros((nbodies,7))
 positions = {}
 positions["Sun"] = np.array([0,0,0,0,-(V_jup*M_jup)/M_sun,0,M_sun]) #x,y,z,vx, vy, vz
 positions["Jupiter"] = np.array([R_jup,0,0,0,V_jup,0,M_jup])
-
+asteroid_init()
+start = timer()   
 integrator()
+duration = timer() - start   
+print(duration)
 print "Final number of asteroids = ", len(bodieslist)-2
 
 plt.figure(figsize=(8,6))
