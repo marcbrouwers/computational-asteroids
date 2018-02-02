@@ -29,7 +29,7 @@ def matmul(A, B, C):
         C[row,col] = A[row,col]+ B[row,col]
     
 @cuda.jit
-def fast(xast, xsun, xjup, vast, vsun, vjup, astforce):
+def fast(xast, xsun, xjup, vast, vsun, vjup, astforce, sunforce):
     """Perform matrix multiplication of C = A * B
     """
     G = 0.000267008433813
@@ -46,13 +46,22 @@ def fast(xast, xsun, xjup, vast, vsun, vjup, astforce):
 def fstel(xsun, vsun, xjup, vjup):  
     Msun = 1047.945205      
     dt = 1/365.25      
-    col = cuda.grid(1)
-    if col < xsun.shape[1]:
-        vsun[col] += dt * G * (xjup[0,col]-xsun[0,col])/(((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**(3./2.) )   
-        vjup[col] -= Msun * dt * G * (xjup[0,col]-xsun[0,col])/(((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**(3./2.) )   
-        xsun[0,col] += vsun[col]*dt
-        xjup[0,col] += vjup[col]*dt
-
+    
+    sunforcex = G * (xjup[0,0]-xsun[0,0])/(((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**(3./2.) )   
+    sunforcey = G * (xjup[0,1]-xsun[0,1])/(((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**(3./2.) )   
+    sunforcez = G * (xjup[0,2]-xsun[0,2])/(((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**(3./2.) )   
+    vsun[0] += sunforcex*dt
+    vjup[0] -= Msun * sunforcex*dt
+    vsun[1] +=  sunforcey*dt
+    vjup[1] -=  Msun * sunforcey*dt 
+    vsun[2] +=  sunforcez*dt
+    vjup[2] -=  Msun * sunforcez*dt
+    xsun[0,0] = xsun[0,0] + vsun[0]*dt
+    xjup[0,0] = xjup[0,0] + vjup[0]*dt
+    xsun[0,1] = xsun[0,1] + vsun[1]*dt
+    xjup[0,1] = xjup[0,1] + vjup[1]*dt 
+    xsun[0,2] = xsun[0,2] + vsun[2]*dt
+    xjup[0,2] = xjup[0,2] + vjup[2]*dt
 
 def EulerCromer_sun(xsun,vsun, xjup, dt):
         vsun = vsun + M_jup *acceleration(xsun, xjup) * dt
@@ -118,9 +127,6 @@ blockspergrid_x = int(math.ceil(A.shape[0] / threadsperblock[0]))
 blockspergrid_y = int(math.ceil(B.shape[1] / threadsperblock[1]))
 blockspergrid = (blockspergrid_x, blockspergrid_y)
 
-blockspergrid_x1 = int(math.ceil(A.shape[0] / threadsperblock[0]))
-blockspergrid_y1 = int(math.ceil(B.shape[1] / threadsperblock[1]))
-blockspergrid1 = (blockspergrid_x1, blockspergrid_y1)
 
 #plt.figure(figsize=(8,6))
 #plt.plot(B[0,0], B[0,1], 'o', c = 'y') 
@@ -131,43 +137,32 @@ start = timer()
 # Start the kernel 
 print "Number of intervals: ", t_intervals
 time = timer()
-
-time_1 = 0
-time_2 = 0
 for i in range(t_intervals):
-    
 #    xsun_global_mem = cuda.to_device(xsun)
 #    xjup_global_mem = cuda.to_device(xjup)
 #    vsun_global_mem = cuda.to_device(vsun)
 #    vjup_global_mem = cuda.to_device(vjup)
-    interval = timer()
-    fast[blockspergrid, threadsperblock](xast_global_mem, xsun_global_mem, xjup_global_mem, vast_global_mem, vsun_global_mem, vjup_global_mem, astforce_global_mem)
-    time_1+= timer() - interval
-    
-    interval = timer()
-    fstel[blockspergrid, threadsperblock](xsun_global_mem, vsun_global_mem, xjup_global_mem, vjup_global_mem)
-    time_2 += timer() - interval
-    
+    fast[blockspergrid, threadsperblock](xast_global_mem, xsun_global_mem, xjup_global_mem, vast_global_mem, vsun_global_mem, vjup_global_mem, astforce_global_mem, sunforce_global_mem)
 #    xast = xast_global_mem.copy_to_host()
 #    vast = vast_global_mem.copy_to_host()
 #    vast_global_mem = cuda.to_device(vast)
 #    vsun_global_mem = cuda.to_device(vsun)
-#    xsun = xsun_global_mem.copy_to_host() 
-#    xjup = xjup_global_mem.copy_to_host()
-#    vsun = vsun_global_mem.copy_to_host()
-#    vjup = vjup_global_mem.copy_to_host()
-#    xsun, vsun = EulerCromer_sun(xsun,vsun, xjup, dt)
-#    xjup, vjup = EulerCromer_jup(xjup,vjup, xsun, dt)
+    xsun = xsun_global_mem.copy_to_host() 
+    xjup = xjup_global_mem.copy_to_host()
+    vsun = vsun_global_mem.copy_to_host()
+    vjup = vjup_global_mem.copy_to_host()
+    xsun, vsun = EulerCromer_sun(xsun,vsun, xjup, dt)
+    xjup, vjup = EulerCromer_jup(xjup,vjup, xsun, dt)
 #    if (i%10 == 0):
 #        plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
 #        plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b') 
 #        plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 1)  
 #        plt.xlim(-1.5,1.5)
 #        plt.ylim(-1.5,1.5)
-#    xsun_global_mem = cuda.to_device(xsun)
-#    vsun_global_mem = cuda.to_device(vsun)
-#    xjup_global_mem = cuda.to_device(xjup)
-#    vjup_global_mem = cuda.to_device(vjup)
+    xsun_global_mem = cuda.to_device(xsun)
+    vsun_global_mem = cuda.to_device(vsun)
+    xjup_global_mem = cuda.to_device(xjup)
+    vjup_global_mem = cuda.to_device(vjup)
     if (i%(t_intervals/100)==0) and i !=0:
                 print str(round(i*100./t_intervals,2))+"%" + '  dt:  ' + str(round((timer() - time) /  i * (t_intervals - i),0)), xast.shape
 
@@ -183,12 +178,11 @@ for i in range(t_intervals):
 #vast = vast_global_mem.copy_to_host() 
 xast = xast_global_mem.copy_to_host() 
 
-xsun = xsun_global_mem.copy_to_host() 
-xjup = xjup_global_mem.copy_to_host() 
+#xsun = xsun_global_mem.copy_to_host() 
+#xjup = xjup_global_mem.copy_to_host() 
 
 duration = timer() - start 
 print 'actual simulation time: ' + str(duration)
-print 'asteroids', time_1, 'planets', time_2, 'other', duration - time_1 - time_2
 
 
 #plt.figure(figsize=(8,6))
