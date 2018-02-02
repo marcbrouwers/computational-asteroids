@@ -98,7 +98,7 @@ def main():
     V_jup = np.sqrt(G*M_sun/ R_jup)
     R_earth = 1.496e+11 / R_jup_scaling
     
-    nbodies = 25000
+    nbodies = 250000
     dt = 1./365.25 # in years
     t_end = 100# in years
     t_intervals = int(t_end / dt)
