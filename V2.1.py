@@ -6,6 +6,8 @@ import numpy.random as rn
 import math as m
 import matplotlib.pyplot as plt
 from numba import jit
+import pickle
+
 
 # =============================================================================
 # @jit(nopython = True)
@@ -38,6 +40,13 @@ from numba import jit
 
 
 def main(): 
+    def save_obj(obj, name ):
+        with open(name + '.pkl', 'wb') as f:
+            pickle.dump(obj, f)
+    
+    def load_obj(name ):
+        with open(name + '.pkl', 'rb') as f:
+            return pickle.load(f)
     def init():
         xsun = np.array([0,0,0])
         vsun = np.array([0,-(V_jup*M_jup)/M_sun,0]) #x,y,z,vx, vy, vz
@@ -79,9 +88,15 @@ def main():
             xsun, vsun = EulerCromer_gravitational(xsun,vsun,xsun, xjup, dt)
             xjup, vjup = EulerCromer_gravitational(xjup,vjup,xsun, xjup, dt)
             if (i%(t_intervals/100)==0) and i !=0:
+<<<<<<< HEAD
                 print str(i*100./t_intervals)+"%" + '  dt:  ' + str((timer() - time) /  i * (t_intervals - i)), xast.shape
         return xast, xsun, xjup
 
+=======
+                print str(round(i*100./t_intervals,2))+"%" + '  dt:  ' + str(round((timer() - time) /  i * (t_intervals - i),0)), xast.shape
+        return xast, vast, xsun, vsun, xjup, vjup
+        
+>>>>>>> 81d0928b5668fe0e27a4078b6fa4097f5f74931e
     M_jup_scaling = 1.898e+27 # normalization factor for mass
 #   R_jup_scaling = 7.785e+11 # normalization factor for length
     year_scaling = 365 * 24 * 3600 # normalization factor for time
@@ -90,25 +105,56 @@ def main():
     M_sun = 1.989e+30 / M_jup_scaling
     R_jup = 5.2
     M_jup = 1.
+<<<<<<< HEAD
     V_jup = m.sqrt(G*M_sun/ R_jup)
     R_earth = 1.
     
     nbodies = 25000
     dt = 1./365 # in years
     t_end = 100 # in years
+=======
+    V_jup = np.sqrt(G*M_sun/ R_jup)
+    R_earth = 1.496e+11 / R_jup_scaling
+    
+    nbodies = 25000
+    dt = 1./365.25 # in years
+    t_end = 100# in years
+>>>>>>> 81d0928b5668fe0e27a4078b6fa4097f5f74931e
     t_intervals = int(t_end / dt)
     
-    
+
     start = timer()
     xast, vast, xsun, vsun, xjup, vjup = init()
+<<<<<<< HEAD
     xast, xsun, xjup = integrator(xast, vast, xsun, vsun, xjup, vjup)
     duration = timer() - start   
     print 'actual simulation time: ' + str(duration)
     
+=======
+    xast, vast, xsun, vsun, xjup, vjup = integrator(xast, vast, xsun, vsun, xjup, vjup)       
+    duration = timer() - start   
+    print 'actual simulation time: ' + str(duration)
+#    save_obj(xsun, "xsun")
+#    save_obj(vsun, "vsun")
+#    save_obj(xjup, "xjup")
+#    save_obj(vjup, "vjup")
+#    save_obj(xast, "xast")
+#    save_obj(vast, "vast")
+#    save_obj(t_end, "time")
+    print 'plotting...'
+>>>>>>> 81d0928b5668fe0e27a4078b6fa4097f5f74931e
     plt.figure(figsize=(8,6))
     plt.plot(xsun[0], xsun[1], 'o', c = 'y') 
     plt.plot(xjup[0], xjup[1], 'o', c = 'b') 
     plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 1)  
+<<<<<<< HEAD
+=======
+    plt.xlim(-1.2,1.2)
+    plt.ylim(-1.2,1.2)
+    plt.show()
+    plt.hist(np.linalg.norm(xast,axis=1),bins=np.linspace(0.2,1,100))
+    plt.show()
+>>>>>>> 81d0928b5668fe0e27a4078b6fa4097f5f74931e
 
     plt.figure(figsize=(8,6))
     r_asteroids = np.sqrt(xast[:,0]**2 + xast[:,1]**2)
