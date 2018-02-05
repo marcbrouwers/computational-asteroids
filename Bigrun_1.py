@@ -79,10 +79,10 @@ vsun = np.array([0,-(V_jup*M_jup)/M_sun,0], 'f') #x,y,z,vx, vy, vz
 xjup = np.array([R_jup,0,0], 'f')
 vjup = np.array([0,V_jup,0], 'f')
 
+#enable this for eccentricity 
 # =============================================================================
 # theta = np.random.uniform(0, high=2*np.pi, size=nbodies).astype('f')     #Phase of the orbits
-# r = np.random.uniform(2, high=3.5, size=nbodies).astype('f')
-# #r = np.random.uniform(1, high=R_jup, size=nbodies).astype('f')
+# r = np.random.uniform(2, high=5, size=nbodies).astype('f')
 # v = np.sqrt(G*M_sun/r) * np.random.uniform(0.95, high=1.05, size=nbodies).astype('f')
 # vz = v*np.random.uniform(0, 0.05, size=nbodies).astype('f')
 # z = np.zeros(nbodies)
@@ -90,8 +90,9 @@ vjup = np.array([0,V_jup,0], 'f')
 # vast = np.stack((v*np.cos(theta+m.pi/2.),v*np.sin(theta+m.pi/2.),vz), axis=-1)
 # =============================================================================
 
+#enable this for no eccentricity
 theta = np.random.uniform(0, high=2*np.pi, size=nbodies).astype('f')
-r = np.random.uniform(2, high=3.5, size=nbodies).astype('f')
+r = np.random.uniform(2, high=5, size=nbodies).astype('f')
 v = np.sqrt(G*M_sun/r)
 vz = np.zeros(nbodies)
 z = np.zeros(nbodies)
@@ -146,7 +147,7 @@ for i in range(t_intervals):
     if (i%(t_intervals/1000)==0) and i !=0: #change to 1000 for 0.1 pct steps
                 print str(round(i*100./t_intervals,2))+"%" + '  dt:  ' + str(round((timer() - time) /  i * (t_intervals - i),0)), xast.shape, vast.shape
     
-    if i * dt > k * 1000:
+    if i * dt > k * 5000:
         k += 1
         xast = xast_global_mem.copy_to_host()           
         vast = vast_global_mem.copy_to_host() 
@@ -177,10 +178,11 @@ print 'asteroids', time_1, 'planets', time_2, 'other', duration - time_1 - time_
 #------------------------------  Saving/loading  ------------------------------
 
 xast = xast_global_mem.copy_to_host()
-vast = vast_global_mem.copy_to_host()
 xsun = xsun_global_mem.copy_to_host() 
 xjup = xjup_global_mem.copy_to_host()
-
+vast = vast_global_mem.copy_to_host()
+vsun = vsun_global_mem.copy_to_host() 
+vjup = vjup_global_mem.copy_to_host()
 
 save_obj(xsun, "xsun" + '_' + str(t_end/1000))
 save_obj(xjup, "xjup" + '_' + str(t_end/1000))
