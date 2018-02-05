@@ -75,7 +75,7 @@ R_earth = 1.496e+11 / R_jup_scaling
 
 nbodies = 10000
 dt = 1./365.25 # in years
-t_end = 4 # in years
+t_end = 7 # in years
 t_intervals = int(t_end / dt)
 
 xsun = np.array([0.,0.,0.])

@@ -34,19 +34,22 @@ def fast(xast, xsun, xjup, vast, vsun, vjup, astforce):
     dt = 0.5/365.25
     row, col = cuda.grid(2)
     if row < astforce.shape[0] and col < astforce.shape[1]:
-        astforce[row, col] = 0.000267008433813*(1047.945205*(xsun[0,col]-xast[row,col])/(m.sqrt((xsun[0,0]-xast[row,0])**2+(xsun[0,1]-xast[row,1])**2+(xsun[0,2]-xast[row,2])**2)**3 )+(xjup[0,col]-xast[row,col])/(m.sqrt((xjup[0,0]-xast[row,0])**2+(xjup[0,1]-xast[row,1])**2+(xjup[0,2]-xast[row,2])**2)**3 )) 
+        astforce[row, col] = 0.000310166898686*(1047.945205*(xsun[0,col]-xast[row,col])/(m.sqrt((xsun[0,0]-xast[row,0])**2+(xsun[0,1]-xast[row,1])**2+(xsun[0,2]-xast[row,2])**2)**3 )+(xjup[0,col]-xast[row,col])/(m.sqrt((xjup[0,0]-xast[row,0])**2+(xjup[0,1]-xast[row,1])**2+(xjup[0,2]-xast[row,2])**2)**3 )) 
         vast[row,col] = vast[row,col] + astforce[row,col]*dt
         xast[row,col] = xast[row,col] + vast[row,col]*dt
+    cuda.syncthreads()
 #    if col < sunforce.shape[1]:
 #        sunforce[0,col] = G * (xjup[0,col]-xsun[0,col])/(((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**(3./2.) )   
 @cuda.jit
 def fstel(xsun, vsun, xjup, vjup):
     #G and Msun values used explicitly in order to not copy its value back and forth to the GPU every time they are called     
-    dt = 0.5/365.25      
+    dt = 0.5/365.25 
+    cuda.syncthreads()    
     col = cuda.grid(1)
     if col < xsun.shape[1]:
-        vsun[col] += dt * 0.000267008433813 * (xjup[0,col]-xsun[0,col])/(m.sqrt((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**3 )   
-        vjup[col] -= 1047.945205   * dt * 0.000267008433813 * (xjup[0,col]-xsun[0,col])/(m.sqrt((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**3 )    
+        vsun[col] += dt * 0.000310166898686 * (xjup[0,col]-xsun[0,col])/(m.sqrt((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**3 )   
+        vjup[col] -= 1047.945205   * dt * 0.000310166898686 * (xjup[0,col]-xsun[0,col])/(m.sqrt((xjup[0,0]-xsun[0,0])**2+(xjup[0,1]-xsun[0,1])**2+(xjup[0,2]-xsun[0,2])**2)**3 )    
+        cuda.syncthreads()
         xsun[0,col] += vsun[col]*dt
         xjup[0,col] += vjup[col]*dt
 
@@ -67,10 +70,9 @@ def save_obj(obj, name ):
         pickle.dump(obj, f)
         
 M_jup_scaling = 1.898e+27 # normalization factor for mass
-R_jup_scaling = 7.785e+11 # normalization factor for length
+R_jup_scaling = 7.40574e+11 # normalization factor for length
 year_scaling = 365 * 24 * 3600 # normalization factor for time
 G = 6.67408e-11 * R_jup_scaling**(-3) * M_jup_scaling * year_scaling**2
-
 M_sun = 1.989e+30 / M_jup_scaling
 R_jup = 1.
 M_jup = 1.
@@ -78,9 +80,9 @@ e = 0.04839266
 V_jup = np.sqrt((G*M_sun/ R_jup)*((1+e)/(1-e)))
 R_earth = 1.496e+11 / R_jup_scaling
 
-nbodies = 1000                                                                    
+nbodies = 100000                                                                    
 dt = 0.5/365.25 # in years
-t_end = 5 # in years
+t_end = 7 # in years
 t_intervals = int(t_end / dt)
 # Host code
 
@@ -128,6 +130,8 @@ blockspergrid1 = (blockspergrid_x1, blockspergrid_y1)
 #plt.plot(xast[:,0], xast[:,1], 'o', c = 'k', markersize = 1)  
 
 start = timer()
+
+#
 # Start the kernel 
 print "Number of intervals: ", t_intervals
 time = timer()
@@ -174,14 +178,14 @@ save_obj(xsun, "xsun")
 save_obj(xjup, "xjup")
 save_obj(xast, "xast")
 
-plt.figure(figsize=(8,6))
-
-plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 3)  
-plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
-plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b')
-plt.xlim(-1.5,1.5)
-plt.ylim(-1.5,1.5)
-plt.show()
+#plt.figure(figsize=(8,6))
+#
+#plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 3)  
+#plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
+#plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b')
+#plt.xlim(-1.5,1.5)
+#plt.ylim(-1.5,1.5)
+#plt.show()
 #
 #plt.hist(np.linalg.norm(xast,axis=1),bins = np.linspace(0.2,1,1000))
 #plt.show()
