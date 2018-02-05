@@ -41,7 +41,7 @@ e = 0.04839266
 V_jup = np.sqrt((G*M_sun/ R_jup)*((1+e)/(1-e)))
 R_earth = 1.496e+11 / R_jup_scaling
 
-nbodies = 1000
+nbodies = 10000
 dt = 1./365.25 # in years
 t_end = 4 # in years
 t_intervals = int(t_end / dt)
@@ -54,7 +54,7 @@ vjup = np.array([0,V_jup,0], 'f')
 theta = 2*m.pi*np.random.rand(1,nbodies).astype('f')[0]      #Phase of the orbits
 r = np.random.uniform(R_earth, high=R_jup, size=nbodies).astype('f')
 v = np.sqrt(G*M_sun/r) # this is pure keplerian, no random velocities
-z = np.zeros(nbodies, 'f') 
+z = np.zeros(nbodies, 'f') # for now no z_values, otherwise make phi variable
 xast = np.stack((r*np.cos(theta),r*np.sin(theta), z), axis=-1)
 vast = np.stack((v*np.cos(theta+m.pi/2.),v*np.sin(theta+m.pi/2.), z), axis=-1)
 
