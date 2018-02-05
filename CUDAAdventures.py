@@ -37,6 +37,7 @@ def fast(xast, xsun, xjup, vast, vsun, vjup, astforce, sunforce):
     dt = 1/365.25
     row, col = cuda.grid(2)
     if row < astforce.shape[0] and col < astforce.shape[1]:
+        
         astforce[row, col] = G*(Msun*(xsun[0,col]-xast[row,col])/(((xsun[0,0]-xast[row,0])**2+(xsun[0,1]-xast[row,1])**2+(xsun[0,2]-xast[row,2])**2)**(3./2.) )+(xjup[0,col]-xast[row,col])/(((xjup[0,0]-xast[row,0])**2+(xjup[0,1]-xast[row,1])**2+(xjup[0,2]-xast[row,2])**2)**(3./2.) )) 
         vast[row,col] = vast[row,col] + astforce[row,col]*dt
         xast[row,col] = xast[row,col] + vast[row,col]*dt
@@ -83,12 +84,13 @@ G = 6.67408e-11 * R_jup_scaling**(-3) * M_jup_scaling * year_scaling**2
 M_sun = 1.989e+30 / M_jup_scaling
 R_jup = 1.
 M_jup = 1.
-V_jup = np.sqrt(G*M_sun/ R_jup)
+e = 0.04839266
+V_jup = np.sqrt((G*M_sun/ R_jup)*((1+e)/(1-e)))
 R_earth = 1.496e+11 / R_jup_scaling
 
 nbodies = 10000
 dt = 1./365.25 # in years
-t_end = 100 # in years
+t_end = 4 # in years
 t_intervals = int(t_end / dt)
 # Host code
 
@@ -187,13 +189,13 @@ print 'actual simulation time: ' + str(duration)
 
 #plt.figure(figsize=(8,6))
 
-plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 3)  
-plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
-plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b')
-plt.xlim(-1.5,1.5)
-plt.ylim(-1.5,1.5)
-plt.show()
-
-plt.hist(np.linalg.norm(xast,axis=1),bins = np.linspace(0.2,1,100))
-plt.show()
-
+#plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 3)  
+#plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
+#plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b')
+#plt.xlim(-1.5,1.5)
+#plt.ylim(-1.5,1.5)
+#plt.show()
+#
+#plt.hist(np.linalg.norm(xast,axis=1),bins = np.linspace(0.2,1,10000))
+#plt.show()
+print xjup

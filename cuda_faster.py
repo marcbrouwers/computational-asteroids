@@ -37,12 +37,13 @@ G = 6.67408e-11 * R_jup_scaling**(-3) * M_jup_scaling * year_scaling**2
 M_sun = 1.989e+30 / M_jup_scaling
 R_jup = 1.
 M_jup = 1.
-V_jup = np.sqrt(G*M_sun/ R_jup)
+e = 0.04839266
+V_jup = np.sqrt((G*M_sun/ R_jup)*((1+e)/(1-e)))
 R_earth = 1.496e+11 / R_jup_scaling
 
-nbodies = 10000
+nbodies = 1000
 dt = 1./365.25 # in years
-t_end = 100 # in years
+t_end = 4 # in years
 t_intervals = int(t_end / dt)
 
 xsun = np.array([0.,0.,0.], 'f')
@@ -53,7 +54,7 @@ vjup = np.array([0,V_jup,0], 'f')
 theta = 2*m.pi*np.random.rand(1,nbodies).astype('f')[0]      #Phase of the orbits
 r = np.random.uniform(R_earth, high=R_jup, size=nbodies).astype('f')
 v = np.sqrt(G*M_sun/r) # this is pure keplerian, no random velocities
-z = np.zeros(nbodies, 'f') # for now no z_values, otherwise make phi variable
+z = np.zeros(nbodies, 'f') 
 xast = np.stack((r*np.cos(theta),r*np.sin(theta), z), axis=-1)
 vast = np.stack((v*np.cos(theta+m.pi/2.),v*np.sin(theta+m.pi/2.), z), axis=-1)
 
@@ -99,11 +100,12 @@ duration = timer() - start
 print 'actual simulation time: ' + str(duration)
 print 'integration', time_int, 'other', duration - time_int
 
-plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 3)  
-plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
-plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b')
-plt.xlim(-1.5,1.5)
-plt.ylim(-1.5,1.5)
-
-plt.hist(np.linalg.norm(xast,axis=1),bins = np.linspace(0.2,1,100))
-plt.show()
+#plt.plot(xast[:,0], xast[:,1], 'o', c = 'g', markersize = 3)  
+#plt.plot(xsun[0,0], xsun[0,1], 'o', c = 'y') 
+#plt.plot(xjup[0,0], xjup[0,1], 'o', c = 'b')
+#plt.xlim(-1.5,1.5)
+#plt.ylim(-1.5,1.5)
+#plt.show()
+#plt.hist(np.linalg.norm(xast,axis=1),bins = np.linspace(0.2,1,100))
+#plt.show()
+print xjup
